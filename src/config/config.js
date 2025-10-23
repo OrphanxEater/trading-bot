@@ -42,7 +42,7 @@ class Config {
 
   // Strategy Configuration
   get strategy() {
-    return process.env.STRATEGY || 'threshold'; // threshold, dca
+    return process.env.STRATEGY || 'threshold'; // threshold, dca, momentum, grid
   }
 
   get buyThreshold() {
@@ -64,6 +64,77 @@ class Config {
 
   get dcaAmount() {
     return parseFloat(process.env.DCA_AMOUNT || '0.1');
+  }
+
+  // Momentum Strategy Configuration
+  get rsiPeriod() {
+    return parseInt(process.env.RSI_PERIOD || '14');
+  }
+
+  get rsiOversold() {
+    return parseFloat(process.env.RSI_OVERSOLD || '30');
+  }
+
+  get rsiOverbought() {
+    return parseFloat(process.env.RSI_OVERBOUGHT || '70');
+  }
+
+  get momentumThreshold() {
+    return parseFloat(process.env.MOMENTUM_THRESHOLD || '2.0');
+  }
+
+  get confirmationRequired() {
+    return process.env.CONFIRMATION_REQUIRED || 'true';
+  }
+
+  get trailingStopPercent() {
+    return parseFloat(process.env.TRAILING_STOP_PERCENT || '5.0');
+  }
+
+  // Grid Strategy Configuration
+  get gridLevels() {
+    return parseInt(process.env.GRID_LEVELS || '10');
+  }
+
+  get gridSpacing() {
+    return parseFloat(process.env.GRID_SPACING || '2.0');
+  }
+
+  get gridUpperPrice() {
+    return parseFloat(process.env.GRID_UPPER_PRICE || '0');
+  }
+
+  get gridLowerPrice() {
+    return parseFloat(process.env.GRID_LOWER_PRICE || '0');
+  }
+
+  get gridOrderSize() {
+    return parseFloat(process.env.GRID_ORDER_SIZE || '0.01');
+  }
+
+  // Risk Management Configuration
+  get maxDrawdown() {
+    return parseFloat(process.env.MAX_DRAWDOWN || '0.2'); // 20%
+  }
+
+  get maxPositionSize() {
+    return parseFloat(process.env.MAX_POSITION_SIZE || '0.25'); // 25%
+  }
+
+  get kellyFraction() {
+    return parseFloat(process.env.KELLY_FRACTION || '0.25'); // 1/4 Kelly
+  }
+
+  get maxDailyLoss() {
+    return parseFloat(process.env.MAX_DAILY_LOSS || '0.1'); // 10%
+  }
+
+  get enableRiskManagement() {
+    return process.env.ENABLE_RISK_MANAGEMENT === 'true';
+  }
+
+  get enablePerformanceTracking() {
+    return process.env.ENABLE_PERFORMANCE_TRACKING !== 'false'; // Enabled by default
   }
 
   // Advanced Settings

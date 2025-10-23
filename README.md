@@ -8,6 +8,23 @@ A professional, production-ready automated trading bot for Solana blockchain usi
 - **Multiple Trading Strategies**
   - Threshold Strategy: Buy/sell based on price thresholds
   - DCA Strategy: Dollar-cost averaging at regular intervals
+  - **NEW** Momentum Strategy: Trade based on RSI, trend, and momentum indicators
+  - **NEW** Grid Trading: Profit from price oscillations in ranging markets
+- **Advanced Risk Management**
+  - Kelly Criterion position sizing
+  - Maximum drawdown protection
+  - Daily loss limits
+  - Position size limits
+- **Performance Analytics**
+  - Real-time P&L tracking
+  - Sharpe & Sortino ratios
+  - Win rate and profit factor
+  - Trade history and reporting
+- **Technical Indicators**
+  - RSI, MACD, Bollinger Bands
+  - Moving averages (SMA/EMA)
+  - ATR for volatility measurement
+  - Trend detection
 - **Professional Architecture**
   - Modular design with separation of concerns
   - Comprehensive error handling and logging
@@ -17,25 +34,32 @@ A professional, production-ready automated trading bot for Solana blockchain usi
 - **Transaction Management** - Priority fees and retry logic for reliable execution
 - **Security Best Practices** - Secure wallet management and private key handling
 
+**📚 [See ADVANCED_FEATURES.md for detailed guide on new features](./ADVANCED_FEATURES.md)**
+
 ## Architecture
 
 ```
 src/
 ├── config/
-│   └── config.js              # Configuration management
+│   └── config.js                  # Configuration management
 ├── services/
-│   ├── walletManager.js       # Wallet and keypair operations
-│   ├── connectionManager.js   # Solana RPC connection
-│   ├── jupiterService.js      # Jupiter DEX integration
-│   ├── priceMonitor.js        # Price tracking service
-│   └── tradingEngine.js       # Trade execution engine
+│   ├── walletManager.js           # Wallet and keypair operations
+│   ├── connectionManager.js       # Solana RPC connection
+│   ├── jupiterService.js          # Jupiter DEX integration
+│   ├── priceMonitor.js            # Price tracking service
+│   └── tradingEngine.js           # Trade execution engine
 ├── strategies/
-│   ├── thresholdStrategy.js   # Price threshold strategy
-│   └── dcaStrategy.js         # Dollar-cost averaging strategy
+│   ├── thresholdStrategy.js       # Price threshold strategy
+│   ├── dcaStrategy.js             # Dollar-cost averaging strategy
+│   ├── momentumStrategy.js        # Momentum trading with indicators
+│   └── gridStrategy.js            # Grid trading for ranging markets
 ├── utils/
-│   ├── logger.js              # Winston logger
-│   └── helpers.js             # Utility functions
-└── index.js                   # Main entry point
+│   ├── logger.js                  # Winston logger
+│   ├── helpers.js                 # Utility functions
+│   ├── riskManager.js             # Risk management system
+│   ├── performanceAnalytics.js    # Performance tracking
+│   └── technicalIndicators.js     # Technical analysis tools
+└── index.js                       # Main entry point
 ```
 
 ## Prerequisites
@@ -217,6 +241,37 @@ Example (SOL/USDC):
 To get current prices, check:
 - https://jup.ag/
 - https://www.coingecko.com/
+
+## NEW: Advanced Trading Strategies
+
+### Momentum Strategy
+
+Trade based on technical indicators and market momentum:
+
+```env
+STRATEGY="momentum"
+RSI_OVERSOLD="30"
+RSI_OVERBOUGHT="70"
+TRAILING_STOP_PERCENT="5.0"
+ENABLE_PERFORMANCE_TRACKING="true"
+```
+
+**When to use:** Trending markets with clear direction.
+
+### Grid Trading Strategy
+
+Profit from price oscillations:
+
+```env
+STRATEGY="grid"
+GRID_LEVELS="10"
+GRID_SPACING="2.0"
+GRID_ORDER_SIZE="0.05"
+```
+
+**When to use:** Ranging/sideways markets with high volatility.
+
+**📚 [Full guide on advanced strategies in ADVANCED_FEATURES.md](./ADVANCED_FEATURES.md)**
 
 ## Advanced Configuration
 

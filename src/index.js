@@ -14,6 +14,10 @@ const PriceMonitor = require('./services/priceMonitor');
 const TradingEngine = require('./services/tradingEngine');
 const ThresholdStrategy = require('./strategies/thresholdStrategy');
 const DCAStrategy = require('./strategies/dcaStrategy');
+const MomentumStrategy = require('./strategies/momentumStrategy');
+const GridStrategy = require('./strategies/gridStrategy');
+const RiskManager = require('./utils/riskManager');
+const PerformanceAnalytics = require('./utils/performanceAnalytics');
 
 /**
  * Main Bot Class
@@ -24,6 +28,8 @@ class SolanaTradingBot {
     this.priceMonitor = null;
     this.tradingEngine = null;
     this.strategy = null;
+    this.riskManager = null;
+    this.performanceAnalytics = null;
     this.isRunning = false;
   }
 
@@ -61,9 +67,32 @@ class SolanaTradingBot {
         this.config
       );
 
+      // Initialize risk management if enabled
+      if (this.config.enableRiskManagement) {
+        this.riskManager = new RiskManager(this.config);
+        logger.success('Risk management enabled');
+      }
+
+      // Initialize performance tracking if enabled
+      if (this.config.enablePerformanceTracking) {
+        this.performanceAnalytics = new PerformanceAnalytics();
+        logger.success('Performance tracking enabled');
+      }
+
       // Get initial balances
       const balances = await this.tradingEngine.getBalances();
       logger.info('Initial Balances:', balances);
+
+      // Initialize performance analytics with starting balance
+      if (this.performanceAnalytics) {
+        this.performanceAnalytics.initialize(balances.SOL);
+      }
+
+      // Initialize risk manager with peak balance
+      if (this.riskManager) {
+        this.riskManager.peakBalance = balances.SOL;
+        this.riskManager.dailyStartBalance = balances.SOL;
+      }
 
       // Validate sufficient balance
       if (balances.SOL < 0.01) {
@@ -115,8 +144,24 @@ class SolanaTradingBot {
           );
           break;
 
+        case 'momentum':
+          this.strategy = new MomentumStrategy(
+            this.tradingEngine,
+            this.priceMonitor,
+            this.config
+          );
+          break;
+
+        case 'grid':
+          this.strategy = new GridStrategy(
+            this.tradingEngine,
+            this.priceMonitor,
+            this.config
+          );
+          break;
+
         default:
-          throw new Error(`Unknown strategy: ${this.config.strategy}`);
+          throw new Error(`Unknown strategy: ${this.config.strategy}. Available: threshold, dca, momentum, grid`);
       }
 
       await this.strategy.start();
@@ -170,7 +215,18 @@ class SolanaTradingBot {
         logger.info(`Total trades executed: ${history.length}`);
 
         // Display final balances
-        await this.tradingEngine.displayBalances();
+        const finalBalances = await this.tradingEngine.displayBalances();
+
+        // Display performance report
+        if (this.performanceAnalytics && finalBalances) {
+          this.performanceAnalytics.displayReport(finalBalances.SOL);
+        }
+
+        // Display risk metrics
+        if (this.riskManager && finalBalances) {
+          const riskMetrics = this.riskManager.getRiskMetrics(finalBalances.SOL);
+          logger.info('Final Risk Metrics:', riskMetrics);
+        }
       }
 
       process.exit(0);
