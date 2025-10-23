@@ -137,6 +137,41 @@ class Config {
     return process.env.ENABLE_PERFORMANCE_TRACKING !== 'false'; // Enabled by default
   }
 
+  // Intelligent Analysis Configuration
+  get enableIntelligentAnalysis() {
+    return process.env.ENABLE_INTELLIGENT_ANALYSIS !== 'false'; // Enabled by default
+  }
+
+  get analysisLookbackHours() {
+    return parseInt(process.env.ANALYSIS_LOOKBACK_HOURS || '8');
+  }
+
+  // NFT Trading Configuration
+  get enableNFTTrading() {
+    return process.env.ENABLE_NFT_TRADING === 'true';
+  }
+
+  get nftBidSpread() {
+    return parseFloat(process.env.NFT_BID_SPREAD || '3.0'); // 3% below floor
+  }
+
+  get nftAskSpread() {
+    return parseFloat(process.env.NFT_ASK_SPREAD || '3.0'); // 3% above floor
+  }
+
+  get nftMaxPositions() {
+    return parseInt(process.env.NFT_MAX_POSITIONS || '3');
+  }
+
+  get nftRebalanceInterval() {
+    return parseInt(process.env.NFT_REBALANCE_INTERVAL || '3600000'); // 1 hour
+  }
+
+  // Portfolio Management
+  get reserveRatio() {
+    return parseFloat(process.env.RESERVE_RATIO || '0.1'); // 10% reserve
+  }
+
   // Advanced Settings
   get priorityFee() {
     return parseInt(process.env.PRIORITY_FEE || '1000'); // microLamports

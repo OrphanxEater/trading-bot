@@ -16,8 +16,12 @@ const ThresholdStrategy = require('./strategies/thresholdStrategy');
 const DCAStrategy = require('./strategies/dcaStrategy');
 const MomentumStrategy = require('./strategies/momentumStrategy');
 const GridStrategy = require('./strategies/gridStrategy');
+const NFTMarketMakingStrategy = require('./strategies/nftMarketMakingStrategy');
 const RiskManager = require('./utils/riskManager');
 const PerformanceAnalytics = require('./utils/performanceAnalytics');
+const MarketIntelligence = require('./services/marketIntelligence');
+const NFTMarketIntelligence = require('./services/nftMarketIntelligence');
+const PortfolioManager = require('./services/portfolioManager');
 
 /**
  * Main Bot Class
@@ -28,8 +32,12 @@ class SolanaTradingBot {
     this.priceMonitor = null;
     this.tradingEngine = null;
     this.strategy = null;
+    this.nftStrategy = null;
     this.riskManager = null;
     this.performanceAnalytics = null;
+    this.marketIntelligence = null;
+    this.nftMarketIntelligence = null;
+    this.portfolioManager = null;
     this.isRunning = false;
   }
 
@@ -113,6 +121,85 @@ class SolanaTradingBot {
   }
 
   /**
+   * Run intelligent market analysis
+   */
+  async runMarketAnalysis(balances) {
+    try {
+      logger.info('='.repeat(60));
+      logger.info('🧠 RUNNING INTELLIGENT MARKET ANALYSIS');
+      logger.info('='.repeat(60));
+
+      // Initialize intelligence services
+      this.marketIntelligence = new MarketIntelligence(
+        jupiterService,
+        connectionManager
+      );
+
+      this.nftMarketIntelligence = new NFTMarketIntelligence();
+      this.portfolioManager = new PortfolioManager(this.config);
+
+      // Run parallel market analysis
+      logger.info('Analyzing token and NFT markets...');
+
+      const [tokenAnalysis, nftAnalysis] = await Promise.all([
+        this.marketIntelligence.analyzeMarket(
+          this.config.inputToken,
+          this.config.outputToken,
+          this.config.analysisLookbackHours || 8
+        ),
+        this.config.enableNFTTrading
+          ? this.nftMarketIntelligence.analyzeNFTMarket(
+              this.config.analysisLookbackHours || 8
+            )
+          : Promise.resolve({
+              overallActivity: 'DISABLED',
+              recommendation: { action: 'SKIP', allocation: 0 }
+            })
+      ]);
+
+      // Display analysis reports
+      logger.info(this.marketIntelligence.generateReport(tokenAnalysis));
+
+      if (this.config.enableNFTTrading) {
+        logger.info(this.nftMarketIntelligence.generateReport(nftAnalysis));
+      }
+
+      // Calculate portfolio allocation
+      const allocation = this.portfolioManager.calculateAllocation(
+        balances.SOL,
+        tokenAnalysis,
+        nftAnalysis
+      );
+
+      this.portfolioManager.displayAllocation();
+
+      return {
+        tokenAnalysis,
+        nftAnalysis,
+        allocation
+      };
+    } catch (error) {
+      logger.error('Market analysis failed', { error: error.message });
+      // Return default safe allocation
+      return {
+        tokenAnalysis: {
+          recommendedStrategy: this.config.strategy || 'dca',
+          confidence: 50
+        },
+        nftAnalysis: {
+          recommendation: { action: 'SKIP', allocation: 0 }
+        },
+        allocation: {
+          tokenTrading: balances.SOL * 0.8,
+          nftMarketMaking: 0,
+          reserve: balances.SOL * 0.2,
+          strategy: this.config.strategy || 'dca'
+        }
+      };
+    }
+  }
+
+  /**
    * Start the bot with selected strategy
    */
   async start() {
@@ -124,10 +211,32 @@ class SolanaTradingBot {
     try {
       this.isRunning = true;
 
-      logger.info(`Starting bot with ${this.config.strategy} strategy`);
+      // Get current balances
+      const balances = await this.tradingEngine.getBalances();
+
+      // Run intelligent market analysis if enabled
+      let analysis = null;
+      let selectedStrategy = this.config.strategy;
+
+      if (this.config.enableIntelligentAnalysis) {
+        analysis = await this.runMarketAnalysis(balances);
+
+        // Use AI-recommended strategy if not manually overridden
+        if (this.config.strategy === 'auto' || !this.config.strategy) {
+          selectedStrategy = analysis.tokenAnalysis.recommendedStrategy;
+          logger.success(`AI selected strategy: ${selectedStrategy}`, {
+            confidence: analysis.tokenAnalysis.confidence + '%',
+            reasoning: analysis.tokenAnalysis.reasoning
+          });
+        } else {
+          logger.info(`Using manual strategy: ${this.config.strategy} (AI recommended: ${analysis.tokenAnalysis.recommendedStrategy})`);
+        }
+      }
+
+      logger.info(`Starting bot with ${selectedStrategy} strategy`);
 
       // Select and start strategy
-      switch (this.config.strategy.toLowerCase()) {
+      switch (selectedStrategy.toLowerCase()) {
         case 'threshold':
           this.strategy = new ThresholdStrategy(
             this.tradingEngine,
@@ -161,10 +270,22 @@ class SolanaTradingBot {
           break;
 
         default:
-          throw new Error(`Unknown strategy: ${this.config.strategy}. Available: threshold, dca, momentum, grid`);
+          throw new Error(`Unknown strategy: ${selectedStrategy}. Available: threshold, dca, momentum, grid, auto`);
       }
 
       await this.strategy.start();
+
+      // Start NFT market making if analysis recommended it
+      if (analysis && analysis.nftAnalysis.recommendation.action === 'MARKET_MAKE') {
+        logger.info('Starting NFT market making strategy...');
+
+        this.nftStrategy = new NFTMarketMakingStrategy(
+          analysis.nftAnalysis,
+          this.config
+        );
+
+        await this.nftStrategy.start(analysis.allocation.nftMarketMaking);
+      }
 
       logger.success('Bot started successfully');
 
@@ -192,6 +313,10 @@ class SolanaTradingBot {
       this.strategy.stop();
     }
 
+    if (this.nftStrategy) {
+      this.nftStrategy.stop();
+    }
+
     this.isRunning = false;
 
     logger.success('Bot stopped successfully');
@@ -207,7 +332,11 @@ class SolanaTradingBot {
 
       // Display final status
       if (this.strategy) {
-        logger.info('Final Strategy Status:', this.strategy.getStatus());
+        logger.info('Final Token Strategy Status:', this.strategy.getStatus());
+      }
+
+      if (this.nftStrategy) {
+        logger.info('Final NFT Strategy Status:', this.nftStrategy.getStatus());
       }
 
       if (this.tradingEngine) {
