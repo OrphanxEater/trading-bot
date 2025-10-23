@@ -172,6 +172,76 @@ class Config {
     return parseFloat(process.env.RESERVE_RATIO || '0.1'); // 10% reserve
   }
 
+  // HFT Grid Trading Configuration
+  get hftGridLevels() {
+    return parseInt(process.env.HFT_GRID_LEVELS || '20');
+  }
+
+  get hftGridSpacing() {
+    return parseFloat(process.env.HFT_GRID_SPACING || '0.5');
+  }
+
+  get hftRebalanceInterval() {
+    return parseInt(process.env.HFT_REBALANCE_INTERVAL || '500');
+  }
+
+  get hftMinProfitBps() {
+    return parseInt(process.env.HFT_MIN_PROFIT_BPS || '10');
+  }
+
+  get hftMaxSlippageBps() {
+    return parseInt(process.env.HFT_MAX_SLIPPAGE_BPS || '5');
+  }
+
+  get hftOrderSize() {
+    return parseFloat(process.env.HFT_ORDER_SIZE || '0.01');
+  }
+
+  // Pairs Trading Configuration
+  get pairsTokenA() {
+    return process.env.PAIRS_TOKEN_A || 'So11111111111111111111111111111111111111112';
+  }
+
+  get pairsTokenB() {
+    return process.env.PAIRS_TOKEN_B || 'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So';
+  }
+
+  get pairsTokenASymbol() {
+    return process.env.PAIRS_TOKEN_A_SYMBOL || 'SOL';
+  }
+
+  get pairsTokenBSymbol() {
+    return process.env.PAIRS_TOKEN_B_SYMBOL || 'mSOL';
+  }
+
+  get pairsEntryZScore() {
+    return parseFloat(process.env.PAIRS_ENTRY_Z_SCORE || '2.0');
+  }
+
+  get pairsExitZScore() {
+    return parseFloat(process.env.PAIRS_EXIT_Z_SCORE || '0.5');
+  }
+
+  get pairsUpdateInterval() {
+    return parseInt(process.env.PAIRS_UPDATE_INTERVAL || '5000');
+  }
+
+  get pairsHedgeRatioUpdate() {
+    return parseInt(process.env.PAIRS_HEDGE_RATIO_UPDATE || '20');
+  }
+
+  get pairsPositionSize() {
+    return parseFloat(process.env.PAIRS_POSITION_SIZE || '0.1');
+  }
+
+  get pairsProcessNoise() {
+    return parseFloat(process.env.PAIRS_PROCESS_NOISE || '0.0001');
+  }
+
+  get pairsMeasurementNoise() {
+    return parseFloat(process.env.PAIRS_MEASUREMENT_NOISE || '0.01');
+  }
+
   // Advanced Settings
   get priorityFee() {
     return parseInt(process.env.PRIORITY_FEE || '1000'); // microLamports
