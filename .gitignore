@@ -1,9 +1,49 @@
-npm_modules
-npm_modules/*
-node_modules
-node_modules/*
+# Environment variables - NEVER COMMIT THESE
 .env
+.env.local
+.env.*.local
+
+# API Keys and Secrets
+*.key
+*.pem
+secrets/
+credentials/
+
+# Node modules
+npm_modules/
+npm_modules/*
+node_modules/
+node_modules/*
+package-lock.json
+
+# Logs
+logs/
 logs/*
-logs
+*.log
+npm-debug.log*
+
+# Examples and temporary files
+examples/
 examples/*
-examples
+tmp/
+temp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Trading data (may contain sensitive wallet info)
+data/trades/*.json
+data/history/*.db
+
+# Wallet files - CRITICAL SECURITY
+wallet.json
+id.json
+private_keys.txt
+*.wallet
